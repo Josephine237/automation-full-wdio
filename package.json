@@ -16,6 +16,7 @@
         "@wdio/mocha-framework": "^7.24.0",
         "@wdio/selenium-standalone-service": "^7.25.1",
         "@wdio/spec-reporter": "^7.24.0",
+        "@wdio/sync": "^7.25.1",
         "chromedriver": "^105.0.0",
         "wdio-chromedriver-service": "^7.3.2",
         "wdio-edgedriver-service": "^1.2.0",

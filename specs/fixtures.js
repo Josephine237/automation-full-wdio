@@ -1,3 +1,3 @@
-export const username = 'EMAIL';
-export const password = 'PASSWORD!';
-export const userFullName = 'NAME';
+export const username = 'da-app.admin@czechitas.cz';
+export const password = 'Czechitas123';
+export const userFullName = 'Lišák Admin';
