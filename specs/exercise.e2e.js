@@ -5,103 +5,93 @@ describe("Login Page", () => {
   beforeEach(() => {
     browser.reloadSession();
     browser.url("/prihlaseni");
-
-    // const windowSize = browser.getWindowSize();
-    // console.log(windowSize);
-
-    // const allCookies = browser.getCookies();
-    // console.log(allCookies);
-    // browser.saveScreenshot("login_page.png");
-
-    // // toto se nikdy nepoužívá používá se waitForExist - toto totiž čeká jen do té doby, než něco vznikne nebo se objeví => skracuje dobu čekání
-    // browser.pause(5000);
-  })
-
-  // kliknout pouze na tlačítko button a check, že se nepřihlásil
-  it("should not login with no credentials", () => {
-
-    const emailField = $("#email");
-    const passwordField = $("#password");
-    const loginButton = $(".btn-primary");
-  
-    emailField.setValue();
-    passwordField.setValue();
-    loginButton.click();
-
-    // tady bych měla ověřit, že buď vyskočila hláška nebo, že jsem stále na stránce přihlášení
-    // tady teda použiju speciální webdriver selector
-    $("=Přihlásit").click();
-    // const errorMessage = $(".invalid-feedback");
-    // console.log(errorMessage.getText());    
   });
 
-  // správný email a nesprávné heslo + uživatel se nepřihlásil error message
-  it("should not login with invalid credentials", () => {
+  it("should show login form", () => {
+
+    const emailField = $('#email');
+    expect(emailField).toBeDisplayed();
+    expect(emailField).toBeEnabled();
+
+    const passwordField = $('#password');
+    expect(passwordField).toBeDisplayed();
+    expect(passwordField).toBeEnabled();
+
+    const loginButton = $(".btn-primary");
+    expect(loginButton).toBeDisplayed();
+    expect(loginButton).toBeEnabled();   
+  });
+
+    // správné přihlášení   
+  it("should login with valid credentials", () => {
     const emailField = $("#email");
     const passwordField = $("#password");
     const loginButton = $(".btn-primary");
 
     emailField.setValue(username);
-    passwordField.setValue("1234");
+    passwordField.setValue(password);
     loginButton.click();
 
-    const errorMessage = $(".invalid-feedback").getText();
-    console.log(errorMessage);
-
+    const userNameDropdown = $('.navbar-right').$('[data-toggle="dropdown"]');
+    expect(userNameDropdown).toHaveText(/.*\s.+/);
   });
 
-  // správné přihlášení
+  // přihlášení s nesprávnými údaji
   it("should not login with invalid credentials", () => {
-
     const emailField = $("#email");
-    console.log("Email field is displayed: " + emailField.isDisplayed());
-    console.log("Email field is enable: " + emailField.isEnabled());
-
     const passwordField = $("#password");
-    console.log("Password field is displayed: " + passwordField.isDisplayed());
-    console.log("Password field is enable: " + passwordField.isEnabled());
+    const loginButton = $(".btn-primary");
+  
+    emailField.setValue(username);
+    passwordField.setValue('invalid');
+    loginButton.click();
 
     // vypsat text který je na tlačítku přihlášení
-    const loginButton = $(".btn-primary");
-    console.log("Login button has text: " + loginButton.getText());
+    expect(loginButton).toHaveText('Přihlásit');
+
+    // na stránce je jednak tosast message
+    const toastMessage = $('.toast-message');
+    expect(toastMessage).toHaveText('Některé pole obsahuje špatně zadanou hodnotu');
+
+    // ale také validační message ve formuláři
+    const errorMessage = $(".invalid-feedback");
+    expect(errorMessage).toHaveText('Tyto přihlašovací údaje neodpovídají žadnému záznamu.');
 
     // odkaz na "Zapomněli jste svoje heslo" a vypsat hodnotu jeho atributu href
     const odkaz = $("form").$("a").getAttribute("href");
     console.log("Odkaz na zapomenuté heslo je: " + odkaz);
 
-    // přihlášení do aplikace
-    emailField.setValue(username);
-    passwordField.setValue(password);
-    loginButton.click();
-
-    // vypiš jméno přihlášeného uživatele
-    const user = $(".navbar-right").$("strong").getText();
-    console.log(user);
-
+    expect(emailField).toBeDisplayed();
+    expect(passwordField).toBeDisplayed();
+    expect(loginButton).toBeDisplayed();
   });
 
   // odhlášení
   it("should logout", () => {
-
-    const emailField = $("#email")
-    const passwordField = $("#password")
-    const loginButton = $(".btn-primary")
-    const navbarRight = $(".navbar-right")
+    const emailField = $("#email");
+    const passwordField = $("#password");
+    const loginButton = $(".btn-primary");
+    const navbarRight = $(".navbar-right");
+    const userNameDropdown = navbarRight.$('[data-toggle="dropdown"]');
     const odhlasit = $("#logout-link");
 
     emailField.setValue(username);
     passwordField.setValue(password);
     loginButton.click();
+
+    expect(userNameDropdown).toHaveText(/.*\s.+/)
+
     navbarRight.click();
     odhlasit.click();
 
+    expect(userNameDropdown).not.toBeDisplayed();
+    expect(navbarRight).toHaveText('Přihlásit')
   });
 
 });
 
 describe("Application page", () => {
   beforeEach(() => {
-
     browser.reloadSession();
     browser.url("/prihlaseni");
 
@@ -118,7 +108,13 @@ describe("Application page", () => {
     const rows = $(".dataTable").$("tbody").$$("tr");
     console.log("There are: " + rows.length + "rows in the table.");
     rows.forEach((row) => {
-      console.log(row.getText());
+      const columns = row.$$('td')
+    // první sloupec (=> to je ta [0] ) je jméno, jména jsou špatně validovaná, může tam být cokoliv (třeba japonská)
+    expect(columns[0]).toHaveText(/.*\s.+/);
+    expect(columns[1]).toHaveText(/\d{1,2}\.\d{1,2}.\s-\s\d{1,2}\.\d{1,2}.\d{4}/);
+    expect(columns[2]).toHaveText(/Složenka|Bankovní převod|FKSP|Hotově/);
+    // expect(columns[3]).toHaveText();
+ 
     });
 
   });
@@ -129,11 +125,33 @@ describe("Application page", () => {
     $("=Hledám").waitForExist({ reverse: true });
 
     const filteredRows = $(".dataTable").$("tbody").$$("tr");
-    console.log(
-      "There are " + filteredRows.length + "filtered rows in the table."
-    );
+    expect(rows).toHaveLength(2);
     filteredRows.forEach((row) => {
       console.log(row.getText());
     });
   });
 })
+
+describe("Orders page", () => {
+  beforeEach(() => {
+    browser.reloadSession();
+    browser.url("/prihlaseni");
+
+    $("#email").setValue(username);
+    $("#password").setValue(password);
+    $(".btn-primary").click();
+
+    $("=Objednávky").click();
+  })
+
+  it("should list all orders", () => {
+    const orderRows = $(".dataTable").$("tbody").$$("tr")
+    console.log("There are " + orderRows.length + "rows in the table")
+    orderRows.forEach((orderRow) => {
+      console.log(orderRow.getText());
+    })
+  })
+})
+
+
+
